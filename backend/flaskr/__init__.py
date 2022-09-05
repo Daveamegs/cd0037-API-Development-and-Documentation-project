@@ -104,18 +104,14 @@ def create_app(test_config=None):
             question_to_delete = Question.query.filter(
                 Question.id == question_id).one_or_none()
 
-            if question_to_delete is None:
+            if question_to_delete == None:
                 abort(404)
 
             question_to_delete.delete()
-            selection = Question.query.order_by(Question.id).all()
-            data = paginate_questions(request, selection)
 
             return jsonify({
                 "success": True,
-                "deleted_id": question_to_delete.id,
-                "questions": data,
-                "total_questions": len(Question.query.all())
+                "deleted_id": question_to_delete.id
             })
         except:
             abort(422)
@@ -239,22 +235,14 @@ def create_app(test_config=None):
             if category["id"] == 0:
                 questions = Question.query.filter(
                     Question.id.notin_(previous_questions)).all()
-            else:
-                questions = Question.query.filter(
-                    Question.category == str(category["id"])
-                ).filter(
-                    Question.id.notin_(previous_questions)
-                ).all()
 
-            if len(questions) > 0:
-                next_question = questions[random.randint(
-                    0, len(questions))].format()
             else:
-                next_question = None
+                questions = Question.query.filter(Question.category == str(
+                    category["id"])).filter(Question.id.notin_(previous_questions)).all()
 
             return jsonify({
                 "success": True,
-                "question": next_question
+                "question": questions[random.randint(0, len(questions) - 1)].format() if len(questions) else None
             })
 
         except:
