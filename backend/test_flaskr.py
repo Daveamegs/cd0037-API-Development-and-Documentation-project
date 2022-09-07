@@ -58,7 +58,6 @@ class TriviaTestCase(unittest.TestCase):
 
     # Get All Categories Test
     # Pass Test
-
     def test_get_all_categories(self):
         res = self.client().get("/categories")
         data = json.loads(res.data)
@@ -77,7 +76,6 @@ class TriviaTestCase(unittest.TestCase):
 
     # Get Questions Based on Category
     # Pass Test
-
     def test_get_questions_by_category_via_category_id(self):
         res = self.client().get("/categories/2/questions")
         data = json.loads(res.data)
@@ -165,6 +163,47 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 404)
         self.assertEqual(data["success"], False)
         self.assertEqual(data["error_message"], "resource not found")
+
+    # Start Quiz with Category 1 (Science)
+    # Pass Test
+    def test_start_quiz(self):
+        res = self.client().post("/quizzes", json={
+            "previous_questions": [],
+            "quiz_category": {"id": 1}
+        })
+        data = json.loads(res.data)
+        question = data["question"]
+        question_id = question["id"]
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data["success"], True)
+        self.assertEqual(question["category"], 1)
+        self.assertTrue(question_id in [20, 21, 22])
+
+    # End Quiz when out of questions and question is empty
+    # Pass Test
+    def test_end_quiz(self):
+        res = self.client().post("/quizzes", json={
+            "previous_questions": [20, 21, 22],
+            "quiz_category": {"id": 1}
+        })
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data["success"], True)
+        self.assertFalse(data["question"])
+
+    # Fail Test
+    def test_422_unprocessable_quiz(self):
+        res = self.client().post("/quizzes", json={
+            "previous_questions": [],
+            "quiz_category": 100
+        })
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 422)
+        self.assertEqual(data["success"], False)
+        self.assertEqual(data["error_message"], "unprocessable")
 
 
 # Make the tests conveniently executable

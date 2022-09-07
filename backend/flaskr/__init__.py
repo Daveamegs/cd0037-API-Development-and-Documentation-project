@@ -104,7 +104,7 @@ def create_app(test_config=None):
             question_to_delete = Question.query.filter(
                 Question.id == question_id).one_or_none()
 
-            if question_to_delete == None:
+            if question_to_delete is None:
                 abort(404)
 
             question_to_delete.delete()
@@ -169,7 +169,7 @@ def create_app(test_config=None):
 
         search_value = body.get("searchTerm", None)
 
-        if search_value == None:
+        if search_value is None:
             abort(404)
 
         else:
@@ -229,8 +229,8 @@ def create_app(test_config=None):
     def start_quiz():
         try:
             body = request.get_json()
-            category = body.get("quiz_category", None)
-            previous_questions = body.get("previous_questions", None)
+            category = body.get("quiz_category", 0)
+            previous_questions = body.get("previous_questions", [])
 
             if category["id"] == 0:
                 questions = Question.query.filter(
@@ -239,10 +239,15 @@ def create_app(test_config=None):
             else:
                 questions = Question.query.filter(Question.category == str(
                     category["id"])).filter(Question.id.notin_(previous_questions)).all()
+            if len(questions):
+                data = questions[random.randint(
+                    0, len(questions) - 1)].format()
+            else:
+                data = None
 
             return jsonify({
                 "success": True,
-                "question": questions[random.randint(0, len(questions) - 1)].format() if len(questions) else None
+                "question":  data
             })
 
         except:
